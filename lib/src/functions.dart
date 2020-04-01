@@ -46,8 +46,7 @@ class TestFileInfo {
     relative = relative.reversed.toList();
     final alias = relative.join('_').replaceFirst('.dart', '');
 
-    final importPath =
-        (Platform.isWindows ? relative.join('\\') : relative.join('/'));
+    final importPath = relative.join(path.separator);
     final import = "import '$importPath' as $alias;";
     return TestFileInfo._(testFile, alias, import);
   }

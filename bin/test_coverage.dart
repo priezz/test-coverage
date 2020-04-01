@@ -18,7 +18,7 @@ Future main(List<String> arguments) async {
     'exclude',
     help:
         'Exclude specific files or directories using glob pattern (relative to package root), '
-        'e.g. "subdir/*", "**_vm_test.dart".',
+        'e.g. "subdir${path.separator}*", "**_vm_test.dart".',
   );
   parser.addOption('port',
       abbr: 'p',
@@ -30,12 +30,10 @@ Future main(List<String> arguments) async {
       defaultsTo: true);
 
   parser.addFlag('print-test-output',
-      help: 'Print Test output',
-      defaultsTo: false);
+      help: 'Print Test output', defaultsTo: false);
 
   parser.addOption('min-coverage',
-      help: 'Min coverage to pass',
-      defaultsTo: '0');
+      help: 'Min coverage to pass', defaultsTo: '0');
 
   final options = parser.parse(arguments);
 
@@ -54,10 +52,13 @@ Future main(List<String> arguments) async {
   final testFiles = findTestFiles(packageRoot, excludeGlob: excludeGlob);
   print('Found ${testFiles.length} test files.');
   generateMainScript(packageRoot, testFiles);
-  print('Generated test-all script in test/.test_coverage.dart. '
+  print(
+      'Generated test-all script in test${path.separator}.test_coverage.dart. '
       'Please make sure it is added to .gitignore.');
-  await runTestsAndCollect(Directory.current.path, port, printOutput: options.wasParsed('print-test-output')).then((_) {
-    print('Coverage report saved to "coverage/lcov.info".');
+  await runTestsAndCollect(Directory.current.path, port,
+          printOutput: options.wasParsed('print-test-output'))
+      .then((_) {
+    print('Coverage report saved to "coverage${path.separator}lcov.info".');
   });
   final lcov = File(path.join(packageRoot.path, 'coverage', 'lcov.info'));
   final lineCoverage = calculateLineCoverage(lcov);
@@ -66,8 +67,8 @@ Future main(List<String> arguments) async {
   print('Overall line coverage rate: $coveragePct%.');
   final minCoverage = int.parse(options['min-coverage']);
   if (coveragePct < minCoverage) {
-    print('Overall coverage $coveragePct is less than minimum required coverage $minCoverage');
+    print(
+        'Overall coverage $coveragePct is less than minimum required coverage $minCoverage');
     exit(1);
   }
-
 }
