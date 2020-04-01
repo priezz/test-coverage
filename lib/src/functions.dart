@@ -80,7 +80,7 @@ Future<void> runTestsAndCollect(String packageRoot, String port,
     {bool printOutput = false}) async {
   final script = path.join(packageRoot, 'test', '.test_coverage.dart');
   final dartArgs = [
-    '--pause-isolates-on-exit',
+    // '--pause-isolates-on-exit',
     '--enable_asserts',
     '--enable-vm-service=$port',
     script
