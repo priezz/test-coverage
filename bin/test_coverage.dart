@@ -25,9 +25,12 @@ Future main(List<String> arguments) async {
       defaultsTo: '8787',
       help: 'Set custom port for Dart Observatory to use when running tests.');
 
-  parser.addFlag('badge',
-      help: 'Generate coverage badge SVG image in your package root',
-      defaultsTo: true);
+  parser.addFlag(
+    'badge',
+    help: 'Generate coverage badge SVG image in your package root',
+    defaultsTo: true,
+    negatable: true,
+  );
 
   parser.addFlag('print-test-output',
       help: 'Print Test output', defaultsTo: false);
@@ -42,12 +45,12 @@ Future main(List<String> arguments) async {
     return;
   }
 
-  Glob excludeGlob;
+  Glob? excludeGlob;
   if (options['exclude'] is String) {
     excludeGlob = Glob(options['exclude']);
   }
 
-  String port = options['port'];
+  String? port = options['port'];
 
   final testFiles = findTestFiles(packageRoot, excludeGlob: excludeGlob);
   print('Found ${testFiles.length} test files.');
@@ -58,11 +61,11 @@ Future main(List<String> arguments) async {
   await runTestsAndCollect(Directory.current.path, port,
           printOutput: options.wasParsed('print-test-output'))
       .then((_) {
-    print('Coverage report saved to "coverage${path.separator}lcov.info".');
+    print('Coverage report saved to "coverage/lcov.info".');
   });
   final lcov = File(path.join(packageRoot.path, 'coverage', 'lcov.info'));
   final lineCoverage = calculateLineCoverage(lcov);
-  generateBadge(packageRoot, lineCoverage);
+  if (options['badge']) generateBadge(packageRoot, lineCoverage);
   final coveragePct = (lineCoverage * 100).floor();
   print('Overall line coverage rate: $coveragePct%.');
   final minCoverage = int.parse(options['min-coverage']);
