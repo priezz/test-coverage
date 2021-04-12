@@ -7,7 +7,7 @@ import 'dart:io';
 
 import 'package:coverage/coverage.dart' as coverage;
 import 'package:glob/glob.dart';
-import 'package:lcov_dart/lcov_dart.dart';
+import 'package:lcov/lcov.dart';
 import 'package:path/path.dart' as path;
 
 final _sep = path.separator;
