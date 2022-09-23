@@ -10,12 +10,12 @@ executables:
   test_coverage:
 
 dependencies:
-  args: ^2.0.0
-  coverage: ^1.0.2
-  glob: ^2.0.1
+  args: ^2.3.1
+  coverage: ^1.6.1
+  glob: ^2.1.0
   lcov_dart: ^7.0.0
-  path: ^1.8.0
+  path: ^1.8.2
 
 dev_dependencies:
-  pedantic: ^1.11.0
-  test: ^1.16.5
+  lints: ^2.0.0
+  test: ^1.21.6

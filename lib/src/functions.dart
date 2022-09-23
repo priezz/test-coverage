@@ -112,31 +112,28 @@ Future<void> runTestsAndCollect(String packageRoot, String? port,
         'Try setting a different port with --port option.');
   }
 
-  Map<String, Map<int, int>> hitmap;
+  Map<String, coverage.HitMap> hitmap;
   try {
-    final data = await coverage.collect(serviceUri, true, true, false, {});
-    hitmap = await coverage.createHitmap(data['coverage']);
+    final Map<String, dynamic> data =
+        await coverage.collect(serviceUri, true, true, false, {});
+    hitmap = await coverage.HitMap.parseJson(data['coverage']);
   } finally {
     await process.stderr.drain<List<int>?>();
   }
-  final exitStatus = await process.exitCode;
-  if (exitStatus != 0) {
-    throw 'Tests failed with exit code $exitStatus';
-  }
-  final resolver = coverage.Resolver(
+  final int exitStatus = await process.exitCode;
+  if (exitStatus != 0) throw 'Tests failed with exit code $exitStatus';
+
+  final coverage.Resolver resolver = await coverage.Resolver.create(
     packagesPath: path.join(packageRoot, '.packages'),
   );
-  final lcov = coverage.LcovFormatter(
+  final String coverageData = hitmap.formatLcov(
     resolver,
-    reportOn: ['lib${path.separator}'],
     basePath: packageRoot,
+    reportOn: ['lib${path.separator}'],
   );
-  final coverageData = await lcov.format(hitmap);
-  final coveragePath = path.join(packageRoot, 'coverage');
-  final coverageDir = Directory(coveragePath);
-  if (!coverageDir.existsSync()) {
-    coverageDir.createSync();
-  }
+  final String coveragePath = path.join(packageRoot, 'coverage');
+  final Directory coverageDir = Directory(coveragePath);
+  if (!coverageDir.existsSync()) coverageDir.createSync();
   File(path.join(coveragePath, 'lcov.info')).writeAsStringSync(coverageData);
 }
 
@@ -258,7 +255,6 @@ String _color(double percentage) {
 
 class _Color {
   final int r, g, b;
-
   _Color(this.r, this.g, this.b);
 
   @override
