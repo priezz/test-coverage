@@ -1,3 +1,10 @@
+# CHANGELOG
+
+## 0.7.0
+
+- Upgrade dependencies
+- Refactor to stop using deprecated coverage methods
+
 ## 0.6.0
 
 - Migrated code to null safety (#33)

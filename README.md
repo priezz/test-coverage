@@ -10,7 +10,8 @@ Add dev dependency to your `pubspec.yaml`:
 
 ```yaml
 dev_dependencies:
-  test_coverage: ^0.4.2
+  test_coverage:
+    git: https://github.com/priezz/test-coverage
 ```
 
 Run `pub get` to install. Then, in the root of your project run:
