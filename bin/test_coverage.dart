@@ -18,7 +18,7 @@ Future main(List<String> arguments) async {
     'exclude',
     help:
         'Exclude specific files or directories using glob pattern (relative to package root), '
-        'e.g. "subdir/*", "**_vm_test.dart".',
+        'e.g. "subdir${path.separator}*", "**_vm_test.dart".',
   );
   parser.addOption('port',
       abbr: 'p',
@@ -45,17 +45,18 @@ Future main(List<String> arguments) async {
     return;
   }
 
-  Glob excludeGlob;
+  Glob? excludeGlob;
   if (options['exclude'] is String) {
     excludeGlob = Glob(options['exclude']);
   }
 
-  String port = options['port'];
+  String? port = options['port'];
 
   final testFiles = findTestFiles(packageRoot, excludeGlob: excludeGlob);
   print('Found ${testFiles.length} test files.');
   generateMainScript(packageRoot, testFiles);
-  print('Generated test-all script in test/.test_coverage.dart. '
+  print(
+      'Generated test-all script in test${path.separator}.test_coverage.dart. '
       'Please make sure it is added to .gitignore.');
   await runTestsAndCollect(Directory.current.path, port,
           printOutput: options.wasParsed('print-test-output'))

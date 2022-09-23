@@ -7,12 +7,11 @@ import 'dart:io';
 
 import 'package:coverage/coverage.dart' as coverage;
 import 'package:glob/glob.dart';
-import 'package:lcov_dart/lcov_dart.dart';
 import 'package:path/path.dart' as path;
 
 final _sep = path.separator;
 
-List<File> findTestFiles(Directory packageRoot, {Glob excludeGlob}) {
+List<File> findTestFiles(Directory packageRoot, {Glob? excludeGlob}) {
   final testsPath = path.join(packageRoot.absolute.path, 'test');
   final testsRoot = Directory(testsPath);
   final contents = testsRoot.listSync(recursive: true);
@@ -45,7 +44,8 @@ class TestFileInfo {
     }
     relative = relative.reversed.toList();
     final alias = relative.join('_').replaceFirst('.dart', '');
-    final importPath = relative.join('/');
+
+    final importPath = relative.join(path.separator);
     final import = "import '$importPath' as $alias;";
     return TestFileInfo._(testFile, alias, import);
   }
@@ -67,7 +67,9 @@ void generateMainScript(Directory packageRoot, List<File> testFiles) {
     ..writeln('// Consider adding this file to your .gitignore.')
     ..writeln();
   imports.forEach(buffer.writeln);
-  buffer..writeln()..writeln('void main() {');
+  buffer
+    ..writeln()
+    ..writeln('void main() {');
   mainBody.forEach(buffer.writeln);
   buffer.writeln('}');
   File(
@@ -75,18 +77,18 @@ void generateMainScript(Directory packageRoot, List<File> testFiles) {
   ).writeAsStringSync(buffer.toString());
 }
 
-Future<void> runTestsAndCollect(String packageRoot, String port,
+Future<void> runTestsAndCollect(String packageRoot, String? port,
     {bool printOutput = false}) async {
   final script = path.join(packageRoot, 'test', '.test_coverage.dart');
   final dartArgs = [
-    '--pause-isolates-on-exit',
+    // '--pause-isolates-on-exit',
     '--enable_asserts',
     '--enable-vm-service=$port',
     script
   ];
   final process =
       await Process.start('dart', dartArgs, workingDirectory: packageRoot);
-  final serviceUriCompleter = Completer<Uri>();
+  final serviceUriCompleter = Completer<Uri?>();
   process.stdout
       .transform(utf8.decoder)
       .transform(const LineSplitter())
@@ -115,7 +117,7 @@ Future<void> runTestsAndCollect(String packageRoot, String port,
     final data = await coverage.collect(serviceUri, true, true, false, {});
     hitmap = await coverage.createHitmap(data['coverage']);
   } finally {
-    await process.stderr.drain<List<int>>();
+    await process.stderr.drain<List<int>?>();
   }
   final exitStatus = await process.exitCode;
   if (exitStatus != 0) {
@@ -139,7 +141,7 @@ Future<void> runTestsAndCollect(String packageRoot, String port,
 }
 
 // copied from `coverage` package
-Uri _extractObservatoryUri(String str) {
+Uri? _extractObservatoryUri(String str) {
   const kObservatoryListening = 'Observatory listening on ';
   final msgPos = str.indexOf(kObservatoryListening);
   if (msgPos == -1) return null;
@@ -153,15 +155,21 @@ Uri _extractObservatoryUri(String str) {
 }
 
 double calculateLineCoverage(File lcovReport) {
-  final report = Report.fromCoverage(lcovReport.readAsStringSync());
+  final lflhRegex = RegExp(r'^L[FH]:(\d*)$');
+  final reportFileContent = lcovReport.readAsLinesSync();
+  reportFileContent.retainWhere((l) => lflhRegex.hasMatch(l));
   var totalLines = 0;
   var hitLines = 0;
-  for (final rec in report.records) {
-    for (final line in rec.lines.data) {
-      totalLines++;
-      hitLines += (line.executionCount > 0) ? 1 : 0;
+  for (final line in reportFileContent) {
+    var valueString = lflhRegex.matchAsPrefix(line)?.group(1) ?? '0';
+    var value = int.tryParse(valueString) ?? 0;
+    if (line.startsWith('LF')) {
+      totalLines += value;
+    } else {
+      hitLines += value;
     }
   }
+  if (totalLines == 0) return 1;
   return hitLines / totalLines;
 }
 
@@ -187,7 +195,11 @@ class _BadgeMetrics {
   final int rightX;
   final int rightLength;
 
-  _BadgeMetrics({this.width, this.rightX, this.rightLength});
+  _BadgeMetrics({
+    required this.width,
+    required this.rightX,
+    required this.rightLength,
+  });
 
   factory _BadgeMetrics.forPercentage(double value) {
     final pct = (value * 100).floor();
@@ -221,8 +233,8 @@ String _color(double percentage) {
     0.9: _Color(0x97, 0xCA, 0x00),
     1.0: _Color(0x44, 0xCC, 0x11),
   };
-  double lower;
-  double upper;
+  late double lower;
+  double? upper;
   for (final key in map.keys) {
     if (percentage < key) {
       upper = key;
@@ -231,8 +243,8 @@ String _color(double percentage) {
     if (key < 1.0) lower = key;
   }
   upper ??= 1.0;
-  final lowerColor = map[lower];
-  final upperColor = map[upper];
+  final lowerColor = map[lower]!;
+  final upperColor = map[upper]!;
   final range = upper - lower;
   final rangePct = (percentage - lower) / range;
   final pctLower = 1 - rangePct;
