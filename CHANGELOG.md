@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.8.0
+
+- Write pretty output to `coverage.txt`
+
 ## 0.7.0
 
 - Upgrade dependencies

@@ -135,6 +135,15 @@ Future<void> runTestsAndCollect(String packageRoot, String? port,
   final Directory coverageDir = Directory(coveragePath);
   if (!coverageDir.existsSync()) coverageDir.createSync();
   File(path.join(coveragePath, 'lcov.info')).writeAsStringSync(coverageData);
+
+  final String prettyData = await hitmap.prettyPrint(
+    resolver,
+    coverage.Loader(),
+    reportBranches: true,
+    reportFuncs: true,
+    reportOn: ['lib${path.separator}'],
+  );
+  File(path.join(coveragePath, 'coverage.txt')).writeAsStringSync(prettyData);
 }
 
 // copied from `coverage` package
